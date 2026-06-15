@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hospital Bed Availability Display</title>
+<style>
+:root{
+  --navy:#0b1f3a;
+  --blue:#0d6efd;
+  --cyan:#00a6c8;
+  --teal:#0f766e;
+  --green:#0f9f6e;
+  --amber:#d97706;
+  --red:#dc3545;
+  --ink:#102033;
+  --muted:#607086;
+  --line:#d9e7f2;
+  --card:#ffffff;
+  --soft:#f4f9fc;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100%;font-family:Inter,"Segoe UI",Arial,sans-serif;color:var(--ink);background:#eef6fb;}
+body{
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(13,110,253,.14), transparent 34%),
+    radial-gradient(circle at 88% 18%, rgba(15,118,110,.14), transparent 32%),
+    linear-gradient(135deg,#f7fbfe 0%,#edf7fb 42%,#f9fcff 100%);
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;
+  background-image:
+    linear-gradient(90deg,rgba(11,31,58,.045) 1px,transparent 1px),
+    linear-gradient(rgba(11,31,58,.045) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:linear-gradient(to bottom, black, transparent 90%);
+}
+.app{min-height:100vh;padding:22px;display:flex;flex-direction:column;gap:16px;position:relative;}
+.header{
+  min-height:92px;background:linear-gradient(135deg,#ffffff 0%,#f8fcff 100%);border:1px solid #dcebf5;border-radius:26px;
+  display:flex;align-items:center;justify-content:space-between;padding:18px 24px;box-shadow:0 18px 50px rgba(20,55,90,.12);position:relative;overflow:hidden;
+}
+.header::after{content:"";position:absolute;right:-90px;top:-90px;width:260px;height:260px;background:linear-gradient(135deg,rgba(0,166,200,.18),rgba(13,110,253,.08));border-radius:50%;}
+.brand{display:flex;align-items:center;gap:16px;z-index:1}.logo{width:58px;height:58px;border-radius:18px;background:linear-gradient(135deg,var(--teal),var(--blue));display:grid;place-items:center;color:white;font-size:31px;font-weight:900;box-shadow:0 14px 30px rgba(13,110,253,.25)}
+.brand h1{font-size:30px;line-height:1.1;color:#0b1f3a;letter-spacing:-.4px}.brand p{font-size:14px;color:var(--muted);margin-top:5px;font-weight:600}.right-meta{z-index:1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}.pill{background:#f0f8fd;border:1px solid #cce4f3;border-radius:999px;padding:10px 14px;font-size:14px;font-weight:800;color:#174365;white-space:nowrap}.live{background:#eafaf3;color:#08744c;border-color:#bdebd7}.dot{display:inline-block;width:8px;height:8px;background:#11a66f;border-radius:50%;margin-right:7px;animation:pulse 1.2s infinite}@keyframes pulse{50%{opacity:.35;transform:scale(1.25)}}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.kpi{background:var(--card);border:1px solid #deebf4;border-radius:24px;padding:17px 18px;box-shadow:0 14px 40px rgba(20,55,90,.10);display:flex;align-items:center;justify-content:space-between;min-height:96px;position:relative;overflow:hidden}.kpi::after{content:"";position:absolute;right:-28px;bottom:-32px;width:100px;height:100px;border-radius:50%;background:rgba(13,110,253,.08)}.kpi small{font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:900}.kpi strong{display:block;font-size:38px;line-height:1;margin-top:8px;letter-spacing:-1px}.kpi .ic{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;font-size:24px;z-index:1}.kpi.total strong{color:var(--blue)}.kpi.free strong{color:var(--green)}.kpi.used strong{color:var(--red)}.kpi.occ strong{color:var(--amber)}.total .ic{background:#e9f2ff}.free .ic{background:#e8fff5}.used .ic{background:#fff0f2}.occ .ic{background:#fff7e6}
+.panel{flex:1;background:rgba(255,255,255,.82);border:1px solid #dcebf5;border-radius:28px;box-shadow:0 18px 55px rgba(20,55,90,.12);padding:18px;display:flex;flex-direction:column;min-height:0;backdrop-filter:blur(12px)}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding:0 4px}.panel-title h2{font-size:24px;color:var(--navy);letter-spacing:-.2px}.panel-title p{font-size:13px;color:var(--muted);font-weight:700;margin-top:3px}.controls{display:flex;gap:8px;align-items:center}.btn{border:1px solid #cfe2f0;background:#fff;color:#164261;border-radius:14px;padding:10px 13px;font-weight:900;cursor:pointer;box-shadow:0 6px 16px rgba(20,55,90,.08)}.btn:hover{background:#eef8ff}.page-indicator{background:linear-gradient(135deg,#e7f4ff,#f5fbff);border:1px solid #c9e4f6;border-radius:999px;padding:10px 14px;color:#0c5791;font-weight:900;font-size:14px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-content:stretch;flex:1}.floor-card{background:linear-gradient(180deg,#ffffff 0%,#f8fbfe 100%);border:1px solid #dce9f3;border-radius:24px;padding:18px;box-shadow:0 14px 36px rgba(20,55,90,.10);display:flex;flex-direction:column;justify-content:space-between;min-height:0;position:relative;overflow:hidden}.floor-card::before{content:"";position:absolute;right:-42px;top:-42px;width:130px;height:130px;border-radius:50%;background:linear-gradient(135deg,rgba(13,110,253,.10),rgba(0,166,200,.06))}.floor-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;position:relative;z-index:1}.floor-name{font-size:24px;font-weight:950;color:#102a4a;letter-spacing:-.4px}.sub{font-size:12px;color:var(--muted);font-weight:800;margin-top:4px;text-transform:uppercase;letter-spacing:.7px}.status{border-radius:999px;padding:8px 12px;font-size:12px;font-weight:950;letter-spacing:.5px;white-space:nowrap}.status.available{background:#e3f9ef;color:#08744c}.status.limited{background:#fff3cf;color:#8a5200}.status.full{background:#ffe7eb;color:#b71c2b;animation:blink 1.1s infinite}@keyframes blink{50%{opacity:.55}}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.metric{background:#f3f8fc;border:1px solid #dce9f3;border-radius:18px;padding:12px 9px;text-align:center}.metric label{display:block;font-size:12px;color:#6b7d94;text-transform:uppercase;letter-spacing:.7px;font-weight:950;margin-bottom:6px}.metric b{font-size:30px;line-height:1}.metric.total b{color:var(--blue)}.metric.free b{color:var(--green)}.metric.used b{color:var(--red)}
+.occ-row{position:relative;z-index:1}.occ-label{display:flex;justify-content:space-between;font-size:12px;color:#61728a;font-weight:950;margin-bottom:8px}.bar{height:12px;background:#e6eef5;border-radius:999px;overflow:hidden}.fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#0f9f6e 0%,#f4b93f 58%,#dc3545 100%);box-shadow:0 5px 14px rgba(220,53,69,.18)}
+.footer{min-height:48px;background:#0b1f3a;color:#ffffff;border-radius:22px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:15px;font-weight:800;box-shadow:0 16px 38px rgba(11,31,58,.22)}.ticker{overflow:hidden;white-space:nowrap;flex:1}.ticker span{display:inline-block;padding-left:100%;animation:ticker 22s linear infinite}@keyframes ticker{to{transform:translateX(-100%)}}.powered{white-space:nowrap;color:#d9f4ff;font-weight:900}
+#adVideoScreen{display:none;position:fixed;inset:0;background:#000;z-index:20}#adVideo{width:100%;height:100%;object-fit:cover}.ad-label{position:absolute;top:24px;right:24px;background:rgba(255,255,255,.92);border-radius:999px;padding:10px 16px;font-weight:950;color:#0b1f3a}
+@media (max-width:1100px){.app{padding:16px}.kpis{grid-template-columns:repeat(2,1fr)}.cards{grid-template-columns:repeat(2,1fr)}.brand h1{font-size:25px}.header{align-items:flex-start;gap:10px;flex-direction:column}.right-meta{justify-content:flex-start}.footer{flex-direction:column;align-items:flex-start}}
+@media (max-width:700px){body{overflow-y:auto}.app{min-height:auto;padding:12px;gap:12px}.header{border-radius:20px;padding:14px}.logo{width:48px;height:48px;border-radius:14px;font-size:25px}.brand h1{font-size:20px}.brand p{font-size:12px}.pill{font-size:12px;padding:8px 10px}.kpis{grid-template-columns:repeat(2,1fr);gap:10px}.kpi{min-height:82px;padding:13px;border-radius:18px}.kpi strong{font-size:28px}.kpi small{font-size:11px}.kpi .ic{width:38px;height:38px;font-size:19px}.panel{border-radius:20px;padding:12px;flex:unset}.panel-head{align-items:flex-start;gap:10px;flex-direction:column}.controls{width:100%;justify-content:space-between}.cards{grid-template-columns:1fr;flex:unset}.floor-card{min-height:210px;border-radius:20px}.footer{border-radius:18px;font-size:13px}.ticker span{padding-left:20%;animation:ticker 16s linear infinite}}
+@media (min-width:1400px){.app{padding:28px;gap:20px}.header{min-height:105px}.brand h1{font-size:36px}.cards{gap:18px}.floor-card{padding:22px}.floor-name{font-size:29px}.metric b{font-size:38px}.kpi strong{font-size:48px}}
+</style>
+</head>
+<body>
+<div class="app" id="displayPage">
+  <header class="header">
+    <div class="brand">
+      <div class="logo">✚</div>
+      <div><h1>ABC Super Speciality Hospital</h1><p>Live Floor-wise Bed Availability Display</p></div>
+    </div>
+    <div class="right-meta">
+      <div class="pill live"><span class="dot"></span>LIVE • Auto Refresh 5s</div>
+      <div class="pill" id="pageLabel">Page 1 of 2</div>
+      <div class="pill" id="dateTime">--</div>
+    </div>
+  </header>
+
+  <section class="kpis">
+    <div class="kpi total"><div><small>Total Beds</small><strong id="totalBeds">0</strong></div><div class="ic">🏥</div></div>
+    <div class="kpi free"><div><small>Available</small><strong id="availableBeds">0</strong></div><div class="ic">✅</div></div>
+    <div class="kpi used"><div><small>Occupied</small><strong id="occupiedBeds">0</strong></div><div class="ic">🛏️</div></div>
+    <div class="kpi occ"><div><small>Occupancy</small><strong id="overallOcc">0%</strong></div><div class="ic">📊</div></div>
+  </section>
+
+  <main class="panel">
+    <div class="panel-head">
+      <div class="panel-title"><h2>Floor-wise Bed Status</h2><p>Clean hospital-grade view optimized for TV, laptop and mobile screens</p></div>
+      <div class="controls"><button class="btn" onclick="prevPage()">← Previous</button><div class="page-indicator" id="pageIndicator">Page 1 / 2</div><button class="btn" onclick="nextPage()">Next →</button></div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </main>
+
+  <footer class="footer">
+    <div class="ticker"><span>Emergency: 24×7 Available • Ambulance: 108 • Please contact reception for admission assistance • Bed status updates automatically from hospital portal</span></div>
+    <div class="powered">Powered by RMSO Services Pvt. Ltd.</div>
+  </footer>
+</div>
+
+<div id="adVideoScreen"><div class="ad-label">Hospital Awareness Video</div><video id="adVideo" muted playsinline><source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4"></video></div>
+
+<script>
+const AUTO_PAGE_MS = 9000;
+const VIDEO_INTERVAL_MS = 45000;
+const sampleFloorData = [
+  { floor:'Floor 1', total:10, available:5, occupied:5, department:'Emergency & Admission' },
+  { floor:'Floor 2', total:20, available:5, occupied:15, department:'General Ward' },
+  { floor:'Floor 3', total:15, available:9, occupied:6, department:'Pediatrics' },
+  { floor:'Floor 4', total:12, available:0, occupied:12, department:'ICU / Critical Care' },
+  { floor:'Floor 5', total:18, available:7, occupied:11, department:'Private Rooms' },
+  { floor:'Floor 6', total:14, available:2, occupied:12, department:'Surgery Recovery' },
+  { floor:'Floor 7', total:16, available:8, occupied:8, department:'Maternity' },
+  { floor:'Floor 8', total:22, available:4, occupied:18, department:'Medicine Ward' },
+  { floor:'Floor 9', total:11, available:1, occupied:10, department:'NICU' },
+  { floor:'Floor 10', total:24, available:13, occupied:11, department:'Special Rooms' },
+  { floor:'Floor 11', total:19, available:6, occupied:13, department:'Orthopedics' },
+  { floor:'Floor 12', total:17, available:10, occupied:7, department:'Day Care' }
+];
+let currentPage = 0;
+function cardsPerPage(){
+  const w = window.innerWidth;
+  if(w <= 700) return 3;
+  if(w <= 1100) return 4;
+  return 6;
+}
+function updateDateTime(){
+  document.getElementById('dateTime').textContent = new Date().toLocaleString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+function getStatus(x){
+  if(x.available===0) return ['FULL','full'];
+  if(x.available<=3) return ['LIMITED','limited'];
+  return ['AVAILABLE','available'];
+}
+function render(){
+  const per = cardsPerPage();
+  const pages = Math.ceil(sampleFloorData.length/per);
+  if(currentPage >= pages) currentPage = 0;
+  const start = currentPage*per;
+  const list = sampleFloorData.slice(start,start+per);
+  const cards = document.getElementById('cards');
+  cards.innerHTML = list.map(x=>{
+    const occ = x.total ? Math.round((x.occupied/x.total)*100) : 0;
+    const [text,cls] = getStatus(x);
+    return `<article class="floor-card">
+      <div class="floor-top"><div><div class="floor-name">${x.floor}</div><div class="sub">${x.department}</div></div><div class="status ${cls}">${text}</div></div>
+      <div class="metrics"><div class="metric total"><label>Total</label><b>${x.total}</b></div><div class="metric free"><label>Free</label><b>${x.available}</b></div><div class="metric used"><label>Used</label><b>${x.occupied}</b></div></div>
+      <div class="occ-row"><div class="occ-label"><span>Occupancy</span><span>${occ}%</span></div><div class="bar"><div class="fill" style="width:${occ}%"></div></div></div>
+    </article>`;
+  }).join('');
+  const total = sampleFloorData.reduce((a,b)=>a+b.total,0);
+  const free = sampleFloorData.reduce((a,b)=>a+b.available,0);
+  const used = sampleFloorData.reduce((a,b)=>a+b.occupied,0);
+  document.getElementById('totalBeds').textContent = total;
+  document.getElementById('availableBeds').textContent = free;
+  document.getElementById('occupiedBeds').textContent = used;
+  document.getElementById('overallOcc').textContent = Math.round((used/total)*100)+'%';
+  document.getElementById('pageIndicator').textContent = `Page ${currentPage+1} / ${pages}`;
+  document.getElementById('pageLabel').textContent = `Page ${currentPage+1} of ${pages}`;
+}
+function nextPage(){currentPage = (currentPage + 1) % Math.ceil(sampleFloorData.length/cardsPerPage()); render();}
+function prevPage(){const pages=Math.ceil(sampleFloorData.length/cardsPerPage()); currentPage=(currentPage-1+pages)%pages; render();}
+function playAdvertisement(){
+  const screen=document.getElementById('adVideoScreen'), video=document.getElementById('adVideo'), page=document.getElementById('displayPage');
+  page.style.display='none'; screen.style.display='block'; video.currentTime=0; video.play().catch(()=>{screen.style.display='none';page.style.display='flex';});
+  video.onended=()=>{screen.style.display='none';page.style.display='flex';render();};
+}
+window.addEventListener('resize', render);
+document.addEventListener('keydown', e=>{if(e.key==='ArrowRight')nextPage(); if(e.key==='ArrowLeft')prevPage();});
+updateDateTime(); render();
+setInterval(updateDateTime,1000);
+setInterval(nextPage,AUTO_PAGE_MS);
+setInterval(playAdvertisement,VIDEO_INTERVAL_MS);
+</script>
+</body>
+</html>
